@@ -1,0 +1,77 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - bidichk
+    - bodyclose
+    - copyloopvar
+    - depguard
+    - durationcheck
+    - errcheck
+    - errorlint
+    - gocheckcompilerdirectives
+    - gocritic
+    - gosec
+    - govet
+    - ineffassign
+    - misspell
+    - modernize
+    - nilerr
+    - nilnesserr
+    - nolintlint
+    - revive
+    - staticcheck
+    - thelper
+    - unconvert
+    - unparam
+    - unused
+    - usetesting
+  settings:
+    depguard:
+      rules:
+        # internal/gcpfake is a test fake: only _test.go files may import it.
+        gcpfake-only-in-tests:
+          files:
+            - "!$test"
+          deny:
+            - pkg: github.com/pilef-co/bqto/internal/gcpfake
+              desc: a test fake; import it only from _test.go files
+    revive:
+      # Listing rules would otherwise replace revive's defaults instead of
+      # tuning them.
+      enable-default-rules: true
+      rules:
+        # bqto's Go code has no comments at all (AGENTS.md): no doc comments,
+        # and no comment to justify the blank imports that register services.
+        - name: exported
+          disabled: true
+        - name: package-comments
+          disabled: true
+        - name: blank-imports
+          disabled: true
+    errcheck:
+      # Writing to stderr has no error a user could act on.
+      exclude-functions:
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+  exclusions:
+    rules:
+      # Closing a client, connection, listener or file bqto is done with has
+      # no error a user could act on. errcheck and gosec G104 both report it.
+      - linters: [errcheck]
+        text: "Error return value of `[^`]+\\.Close` is not checked"
+      - linters: [gosec]
+        text: "G104"
+      # Test helpers keep named parameters even when every caller passes the same value.
+      - path: _test\.go
+        linters: [unparam]
+        text: "always receives"
+      # Tests write fixtures in t.TempDir and start helper processes.
+      - path: _test\.go
+        linters: [gosec]
+        text: "G122|G204|G301|G302|G304|G306|G702|G703"

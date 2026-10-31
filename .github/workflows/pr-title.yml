@@ -1,0 +1,24 @@
+name: pr-title
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  title:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: the title is a Conventional Commit
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          pattern='^(feat|fix|docs|chore|refactor|test|ci|build|perf|style|revert)(\([a-z0-9._-]+\))?!?: [^ ].*$'
+          if ! printf '%s\n' "$TITLE" | grep -Eq "$pattern"; then
+            echo "The title \"$TITLE\" is not a Conventional Commit, e.g. \"fix(redis): find an instance by name\"." >&2
+            echo "It becomes the squash commit, and release-please builds the version and the changelog from it." >&2
+            exit 1
+          fi

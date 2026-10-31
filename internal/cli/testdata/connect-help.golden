@@ -1,0 +1,79 @@
+  --debug
+    	print each Google API call, gcloud command and retry to stderr, for bug
+    	reports (also BQTO_DEBUG=1)
+
+  --duration string
+    	max VM lifetime from when the VM starts, e.g. 30m; the tunnel takes a
+    	minute or two to open (default: 30m)
+
+  --end-on-stdin-close
+    	end the session and delete the bastion, as on SIGTERM, when stdin
+    	closes; for an app that starts bqto and keeps a pipe to its stdin open
+    	(not with -- CMD)
+
+  --instance string
+    	instance name (cloudsql), region/cluster/instance (alloydb),
+    	region/instance (redis), region/instance (valkey) or region/name
+    	(fakesocks)
+
+  --network string
+    	VPC network name or projects/P/global/networks/N (default: the
+    	instance's network)
+
+  --no-input
+    	never prompt; fail on missing values (on when stdin is not a terminal,
+    	and with --output json)
+
+  --output string
+    	text, or json: one JSON object per service on stdout when the session is
+    	ready
+
+  -p, --port int
+    	local port (default: the service's port + 10000)
+
+  --project string
+    	GCP project ID
+
+  --region string
+    	region (inferred from instance if omitted)
+
+  --service string
+    	service type: cloudsql, alloydb, redis, valkey or fakesocks
+
+  --zone string
+    	zone override (default: first UP zone in region with capacity)
+
+
+  --endpoint string
+    	connect to a private IP:PORT instead of a named instance (bqto Pro)
+
+  --image string
+    	bastion image, projects/P/global/images/IMAGE or
+    	projects/P/global/images/family/FAMILY (bqto Pro)
+
+  --machine-type string
+    	bastion VM machine type, default e2-micro (bqto Pro)
+
+  --profile string
+    	open a saved profile, or several separated by commas (bqto Pro)
+
+  --replace
+    	with --save, overwrite the profile already saved under that name
+    	(bqto Pro)
+
+  --save string
+    	save this session as a profile (bqto Pro)
+
+  --spot
+    	use a Spot VM, which costs less and may be preempted (bqto Pro)
+
+  --stack string
+    	open every profile of a saved stack in one session (bqto Pro)
+
+  --subnet string
+    	subnet self-link, or a short name that expands to the full self-link
+    	(bqto Pro)
+
+  --web
+    	start a local HTTP reverse proxy that adds your identity token, cloudrun
+    	only (bqto Pro)

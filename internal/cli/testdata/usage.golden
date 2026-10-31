@@ -1,0 +1,22 @@
+Usage:
+  bqto                                   start the interactive wizard
+
+  bqto connect [flags] [-- CMD ARGS...]  open a session; see bqto connect -h
+
+  bqto profile COMMAND                   saved connections (bqto Pro)
+  bqto stack COMMAND                     groups of profiles (bqto Pro)
+
+  bqto completion bash|zsh|fish          print a shell completion script
+  bqto version [--output json]           show the version and any new release
+  bqto update                            replace bqto with the newest release
+
+Examples:
+  bqto connect --project P --service cloudsql --instance orders
+      open a tunnel; the ready: line shows the local port
+
+  bqto connect --project P --service cloudsql --instance orders -- psql -U app
+      run psql through the tunnel, then end the session
+
+Put --debug before any command, or set BQTO_DEBUG=1, to print each Google API
+call, gcloud command and retry to stderr. Run 'bqto connect --help' for connect
+flags.

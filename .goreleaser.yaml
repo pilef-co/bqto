@@ -1,0 +1,86 @@
+version: 2
+
+project_name: bqto
+
+before:
+  hooks:
+    - mkdir -p completions
+    - sh -c "go run ./cmd/bqto completion bash > completions/bqto.bash"
+    - sh -c "go run ./cmd/bqto completion zsh > completions/_bqto"
+    - sh -c "go run ./cmd/bqto completion fish > completions/bqto.fish"
+
+builds:
+  - main: ./cmd/bqto
+    binary: bqto
+    env:
+      - CGO_ENABLED=0
+    goos: [darwin, linux]
+    goarch: [amd64, arm64]
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X github.com/pilef-co/bqto/internal/cli.version={{ .Tag }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - formats: [tar.gz]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    builds_info:
+      owner: root
+      group: root
+      mode: 0755
+      mtime: "{{ .CommitDate }}"
+    files:
+      - src: README.md
+        info:
+          owner: root
+          group: root
+          mode: 0644
+          mtime: "{{ .CommitDate }}"
+      - src: LICENSE
+        info:
+          owner: root
+          group: root
+          mode: 0644
+          mtime: "{{ .CommitDate }}"
+      - src: completions/*
+        info:
+          owner: root
+          group: root
+          mode: 0644
+          mtime: "{{ .CommitDate }}"
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+changelog:
+  disable: true
+
+release:
+  mode: keep-existing
+
+homebrew_casks:
+  - name: bqto
+    binaries: [bqto]
+    description: Reach private Google Cloud services through a short-lived bastion
+    homepage: https://bqto.dev/
+    completions:
+      bash: completions/bqto.bash
+      zsh: completions/_bqto
+      fish: completions/bqto.fish
+    hooks:
+      post:
+        install_steps: |
+          on_macos do
+            run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{ .StagedPath }}/bqto"]
+          end
+    repository:
+      owner: pilef-co
+      name: homebrew-tap
+      git:
+        url: git@github.com:pilef-co/homebrew-tap.git
+        private_key: "{{ .Env.HOMEBREW_TAP_KEY }}"
+    commit_author:
+      name: bqto release
+      email: noreply@pilef.co

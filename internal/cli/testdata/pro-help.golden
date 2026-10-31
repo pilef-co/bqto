@@ -1,0 +1,21 @@
+bqto Pro: saved connections (profiles) and groups of them (stacks).
+  bqto connect --project P --service cloudsql --instance orders --save db
+      connect, and save the session as the profile db
+
+  bqto profile create cache --project P --service redis --instance cache
+      save a profile without connecting
+
+  bqto connect db
+      open a profile by name
+
+  bqto stack create work --profile db --profile cache
+      group profiles into a stack
+
+  bqto connect --stack work
+      open every profile of the stack through one bastion
+
+  bqto profile list | show NAME | rename OLD NEW | rm NAME
+      (the same for stack)
+
+These commands need bqto Pro:
+join the bqto Pro beta at https://bqto.dev/#waitlist.

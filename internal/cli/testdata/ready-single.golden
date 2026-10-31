@@ -1,0 +1,14 @@
+ready: 127.0.0.1:16000 → 10.10.0.3:5432 (instance sql), bastion bqto-12345678, expires at 14:28 (in 29m)
+try: psql "host=127.0.0.1 port=16000 user=postgres"
+ready: 127.0.0.1:16001 → 10.0.0.4:5432 (instance us-central1/c/primary), bastion bqto-12345678, expires at 14:28 (in 29m)
+try: psql "host=127.0.0.1 port=16001 user=postgres sslmode=require"
+ready: 127.0.0.1:16002 → 10.0.0.3:6378 (instance us-central1/cache), bastion bqto-12345678, expires at 14:28 (in 29m)
+try: redis-cli -h 127.0.0.1 -p 16002 --tls --cacert server-ca.pem
+CA: gcloud redis instances describe cache --region us-central1 --format='value(serverCaCerts[0].cert)' > server-ca.pem
+AUTH: gcloud redis instances get-auth-string cache --region us-central1
+read endpoint 10.0.0.4:6379 is not forwarded
+ready: 127.0.0.1:16003 → 10.0.0.5:6379 (instance us-central1/valkey), bastion bqto-12345678, expires at 14:28 (in 29m)
+try: redis-cli -h 127.0.0.1 -p 16003
+ready: SOCKS5 proxy 127.0.0.1:16004 → thing us-central1/thing (thing.example), bastion bqto-12345678, expires at 14:28 (in 29m)
+try: thing --proxy 127.0.0.1:16004 --port 19092
+thing: started
