@@ -17,7 +17,7 @@ fix:
 | `4047` | IAP could not find the bastion | it is still starting or was stopped; run `bqto connect` again |
 | `Permission denied (publickey)` | OS Login refused the SSH certificate. A new bastion can refuse it while it boots, so bqto retries for up to a minute before it reports this | grant `roles/compute.osLogin` on the project |
 | `SSH using certificates is not yet generally available` | gcloud is older than 550.0.0 | `gcloud components update`, or your package manager (`apt`, `dnf`, `brew`) if you installed gcloud with one |
-| `Address already in use`, `Cannot bind port` | another program took the tunnel's loopback port while the tunnel started (bqto holds your local port itself, and a taken `-p` stops bqto before the bastion) | run `bqto connect` again |
+| `Address already in use`, `Cannot bind port` | another program took the tunnel's port while the tunnel started | run `bqto connect` again |
 | `ADC account (…) does not match the active gcloud account (…)` | the two logins use different accounts | run the command bqto prints; both logins must be the same account |
 | `x509: certificate signed by unknown authority` | this machine has no CA certificates (common in slim containers), or a TLS-inspecting proxy shows its own certificate | install them (`apt-get install ca-certificates` on Debian or Ubuntu), or add the proxy's CA |
 

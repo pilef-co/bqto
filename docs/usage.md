@@ -1,44 +1,13 @@
 # Using bqto
 
-This page is the reference for people who use bqto every day or run it from
-scripts. It explains how a session works, the flags and environment variables,
-the exit codes, cleanup, updates and the agent skill. The
+Reference for flags, scripts, exit codes, cleanup and updates. The
 [README](../README.md) has the install and the first connection.
 
 ## How a session works
 
-```mermaid
-flowchart LR
-    subgraph laptop["Developer laptop"]
-        client["psql or your app<br/>localhost:15432"]
-    end
-
-    subgraph google["Google front door"]
-        iap["IAP TCP forwarding<br/>tunnel.cloudproxy.app<br/><i>checks IAM per connection</i>"]
-    end
-
-    subgraph vpc["VPC"]
-        bastion["bastion VM<br/>no external IP<br/><i>created per session</i>"]
-        subgraph psc["PSC endpoints"]
-            sql[("Cloud SQL<br/>10.20.0.5:5432")]
-            cache[("Memorystore<br/>10.30.0.7:6379")]
-        end
-    end
-
-    client -->|"WSS / 443"| iap
-    iap -->|"35.235.240.0/20"| bastion
-    bastion --> sql
-    bastion --> cache
-```
-
-The laptop does not route into the VPC. It talks to Google's front door over
-HTTPS. Identity-Aware Proxy (IAP) checks IAM on every connection and forwards to
-the bastion, which is the only part of the path inside the network.
-
 A session has four steps:
 
-1. bqto asks the service's API for its private endpoint. You do not have to
-   find the IP in the instance description.
+1. bqto asks the service's API for its private endpoint.
 2. bqto creates a bastion VM with no external IP.
 3. bqto opens an IAP tunnel and forwards a local port to the endpoint.
 4. bqto deletes the VM on exit. A server-side deadline deletes it if bqto
@@ -54,11 +23,6 @@ the session. bqto then opens it again against the same bastion, while the VM is
 still running and the session still has time. It waits longer between each
 attempt. It gives up after five attempts in a row, or as soon as the bastion is
 gone.
-
-Most of the work is in the first step. For example, a Cloud SQL instance on
-Private Service Connect (PSC) can answer on `10.20.0.5` while its Valkey
-neighbor answers on `10.30.0.7` and `10.30.0.8`, each in a different subnet.
-bqto finds these addresses for you.
 
 ### Session lifecycle
 
@@ -99,35 +63,35 @@ sequenceDiagram
 
 The bastion has two independent ways to go away. bqto deletes it in ordinary
 use. If the process is killed or the laptop dies, bqto cannot do that, so
-Compute Engine deletes the VM when its `max-run-duration` ends. Neither path
-needs any deployed infrastructure.
+Compute Engine deletes the VM when its `max-run-duration` ends.
 
 ## Requirements in detail
 
-The [README](../README.md#requirements) lists the requirements. This is why
-each one exists:
+The [README](../README.md#requirements) lists the requirements. A few more
+details:
 
-- bqto runs `gcloud compute ssh --tunnel-through-iap` for the tunnel, and its
-  bastions require OS Login certificates. gcloud versions older than 550.0.0
-  support them only in `gcloud beta`, so bqto checks the version first.
-- `gcloud compute ssh` runs `ssh`. macOS has it. Slim Linux images need
-  `openssh-client`, and their CA certificates (`ca-certificates`).
-- `gcloud auth login` is used by the tunnel, and
-  `gcloud auth application-default login` for discovery and the VM. bqto
-  checks that both use the same account.
-- IAP reaches the bastion on tcp:22 from `35.235.240.0/20`. bqto checks for a
-  firewall rule or policy that allows it, and does not create one.
+- `gcloud auth login` and `gcloud auth application-default login` must use the
+  same account. bqto checks it.
+- Slim Linux images need `openssh-client` and `ca-certificates`.
+- The network must allow outbound HTTPS with WebSockets to
+  `tunnel.cloudproxy.app`.
+- bqto checks for the firewall rule that lets IAP reach the bastion, but does
+  not create it. A network admin can create one:
+
+  ```sh
+  gcloud compute firewall-rules create allow-iap-ssh \
+    --project=NETWORK_PROJECT --network=NETWORK \
+    --direction=INGRESS --action=ALLOW --rules=tcp:22 \
+    --source-ranges=35.235.240.0/20
+  ```
 
 ## Interface
 
 bqto has an interactive wizard and flags.
 
 Without flags, the wizard asks for the project, the service, the instance and the
-session duration, in that order. bqto looks up the endpoint IP on every connect
-and does not cache it. PSC endpoints change, and a stale cached IP produces a
-confusing failure much later. The free binary keeps no configuration and no
-credentials, because authentication is Application Default Credentials (ADC) and
-IAM throughout.
+session duration, in that order. The free binary keeps no configuration and no
+credentials.
 
 Flags skip the prompts, for returning users and scripts:
 
@@ -150,19 +114,14 @@ bqto connect --service redis    --project my-project --instance europe-west1/cac
 
 `--network` puts the bastion on another VPC than the instance's. It takes a
 name, or `projects/HOST/global/networks/NAME` when the VPC lives in another
-project (Shared VPC). bqto refuses a malformed value before auth.
+project (Shared VPC).
 
-Then use the local port that the `ready:` line prints, with the client that the
-service speaks:
+Then use the local port that the `ready:` line prints. The `try:` line gives a
+command for the service's client:
 
 ```text
 ready: 127.0.0.1:15432 → 10.0.0.5:5432 (instance sql-main), bastion bqto-13f6cae5, expires at 19:30 (in 6m)
 try: psql "host=127.0.0.1 port=15432 user=postgres"
-```
-
-```sh
-psql -h 127.0.0.1 -p 15432 -U app            # Cloud SQL, AlloyDB
-redis-cli -h 127.0.0.1 -p 16379              # Redis, Valkey
 ```
 
 If the default port is taken, bqto says so and uses the next one. Read the
@@ -170,11 +129,7 @@ number from `ready:` instead of assuming it. bqto does not move a port that you
 ask for with `-p`. If that port is taken, bqto stops before it creates the
 bastion.
 
-bqto holds the port it picked from before it creates the bastion until the
-session ends, also while a dropped tunnel reconnects. No other program can take
-it in between. bqto accepts a connection made before `ready:`, or while the
-tunnel reconnects, and closes it at once. Wait for `ready:` (or the ready event
-of `--output json`) before you connect.
+Wait for `ready:` (or the ready event of `--output json`) before you connect.
 
 ### Shell completion
 
@@ -185,10 +140,6 @@ the script, Tab completes:
 - The flags of `bqto connect`.
 - The value after `--service` (the services this binary has) and after
   `--output` (`text`, `json`).
-
-Flags that take free text, such as `--project` or `--instance`, complete
-nothing. The free binary leaves out the bqto Pro flags and services, so Tab
-does not offer something that this binary refuses.
 
 To turn completion on, add the line for your shell to its startup file and open
 a new terminal.
@@ -212,11 +163,7 @@ echo 'bqto completion fish | source' >> ~/.config/fish/config.fish
 ```
 
 On macOS, Terminal starts bash as a login shell, which reads `~/.bash_profile`
-instead of `~/.bashrc`. Put the bash line there. In zsh, `compinit` must run
-before that line. Frameworks such as Oh My Zsh run it. A value completes after a
-space or after `=`: `--service <Tab>` and `--service=<Tab>` both work. The
-script asks bqto itself for the candidates (`bqto __complete WORDS...`), so it
-follows new flags and services without being installed again.
+instead of `~/.bashrc`. Put the bash line there.
 
 ### In scripts and CI
 
@@ -248,14 +195,8 @@ which credential it takes (`auth`: `password`, `iam` for an access token, or
 empty). A script can start bqto in the background, read the line and stop bqto
 with SIGINT or SIGTERM when it is done.
 
-A program that starts bqto, such as a menu bar app, can die without sending a
-signal: a crash, `kill -9`, or a logout. With `--end-on-stdin-close`, bqto
-watches stdin and treats its end as SIGTERM. It ends the session, deletes the
-bastion and exits with the code that SIGTERM would give. The program keeps a
-pipe to bqto's stdin open and does not write to it. The system closes the pipe
-when the program dies, whatever the cause. The flag does not prompt, refuses a
-terminal on stdin, and does not go with `-- CMD`, which hands stdin to the
-command.
+With `--end-on-stdin-close`, bqto ends the session when its stdin closes, for
+example when the program that started it dies. It does not go with `-- CMD`.
 
 ```sh
 bqto connect --end-on-stdin-close --output json \
@@ -293,22 +234,10 @@ Help is the exception. `bqto -h` lists `bqto profile` and `bqto stack`, marked
 `(bqto Pro)`. `bqto profile -h` or `bqto stack -h` shows what they do, with
 examples, and exits 0.
 
-bqto Pro's documentation comes in the archive of each build. It says how to
-install bqto Pro and has an example for every feature. In bqto Pro,
-`bqto connect -h` lists the flags of this binary first and its own after them,
-under `bqto Pro flags:`.
-
 ## What the bastion can reach
 
-bqto is a shortcut for what a developer can already do with their roles: find
-the private IP, create a VM, open a tunnel, delete the VM. It adds no power they
-did not have. The bastion reaches what any VM in the VPC reaches, and the
-service's own authentication decides who gets in. For network isolation, give
-bastions their own subnet with egress firewall rules. That needs bqto Pro, whose
-`--subnet` flag puts the bastion in that subnet. The free binary has no
-`--subnet`: it takes the first subnet in the region that can host a VM, by name
-order. The table in [permissions.md](permissions.md) compares a session with the
-same developer's own VM.
+The bastion reaches what any VM in the VPC reaches.
+[security.md](security.md#what-a-developer-can-do) says how to limit it.
 
 ## Organizations that restrict what a VM may be
 
@@ -373,12 +302,6 @@ Fix: bqto update
 If the release fixes a security issue, the second line is
 `bqto 0.16.1 fixes a security issue in your version.`
 
-In these cases, `bqto version` prints only the version:
-
-- GitHub cannot be reached.
-- bqto was built from a checkout.
-
-`bqto --debug version` adds `could not check for updates` and the cause.
 `bqto version --output json` prints
 `{"version":"0.16.0","latest":"0.16.1","update_available":true,"security":false}`
 and no notice. No other command looks for updates, and nothing runs in the
@@ -394,21 +317,29 @@ installed bqto:
   `checksums.txt`, checks the SHA-256 and replaces the `bqto` binary that ran,
   following symlinks.
 
-If you cannot write to the binary's folder, such as `/usr/local/bin`,
-`bqto update` still downloads and checks the release as you. It prints
-`bqto needs sudo to replace /usr/local/bin/bqto`, and runs `sudo` only to put
-the new binary in place, so sudo asks for your password. Without a terminal, as
-in a script, or without `sudo` on your PATH, it stops instead. In that case,
-move bqto to a folder you own, such as `~/.local/bin`, and put that folder on
-your PATH.
+If the folder is not yours, such as `/usr/local/bin`, `bqto update` asks for
+sudo.
+
+## Install by hand
+
+Download the archive for your machine from the release page, check it and put
+`bqto` on your `PATH`:
+
+```sh
+gh release download --repo pilef-co/bqto --pattern 'bqto_*_darwin_arm64.tar.gz' --pattern checksums.txt
+shasum -a 256 --ignore-missing -c checksums.txt
+tar -xzf bqto_*_darwin_arm64.tar.gz bqto && sudo mv bqto /usr/local/bin/
+```
+
+On an Intel Mac, use `darwin_amd64`. On Linux, use `linux_amd64` or
+`linux_arm64`. If GitHub limits the requests from your address, `install.sh`
+takes a token: `curl … | GITHUB_TOKEN=$(gh auth token) sh`.
 
 ## Coding agents
 
 The bqto skill, [skills/bqto/SKILL.md](../skills/bqto/SKILL.md), teaches a coding
 agent to open a session without prompts, run its command through the tunnel and
-read the `Fix:` lines. It follows the [Agent Skills](https://agentskills.io)
-format: a `bqto` folder with a `SKILL.md` whose frontmatter has `name: bqto` and
-a `description`.
+read the `Fix:` lines.
 
 To install it for every coding agent on this machine, use the
 [skills](https://github.com/vercel-labs/skills) CLI:
@@ -417,13 +348,8 @@ To install it for every coding agent on this machine, use the
 npx skills add pilef-co/bqto -g
 ```
 
-The CLI finds `skills/bqto` and detects the agents you have (Claude Code, Codex,
-Cursor, Gemini CLI, GitHub Copilot, OpenCode and others). It installs the skill
-for each agent in your home folder: one copy in `~/.agents/skills/bqto/`, which
-Codex reads, and a symlink to it in the folder of each other agent, such as
-`~/.claude/skills/bqto/` for Claude Code. Add `--copy` for separate copies, or
-drop `-g` to install it into the current project. `npx skills check` says when
-the skill changed, and `npx skills update` installs the new one.
+It installs the skill for every agent it finds. Drop `-g` to install it into
+the current project. `npx skills update` installs a new version.
 
 You can also copy the skill by hand from a checkout of this repository:
 

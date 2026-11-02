@@ -119,11 +119,9 @@ gcloud iam service-accounts add-iam-policy-binding $SA --project $PROJECT \
   --member "principalSet://iam.googleapis.com/projects/$NUMBER/locations/global/workloadIdentityPools/github-deploy/attribute.repository/$REPO"
 ```
 
-The condition compares the names case-sensitively, which is why the script
-reads `REPO` back from GitHub with its exact case. `repository_id` refuses a
-repository that someone deletes and creates again with the same name. The
-provider also refuses a renamed repository, until you update the condition and
-the binding with the new name.
+The script reads `REPO` back from GitHub because the condition compares names
+case-sensitively. After you rename the repository, update the condition and the
+binding.
 
 ### Roles
 

@@ -40,8 +40,7 @@ roles, and it appears in existing audit logs. The role is
 destination port but not by VM name. You have no second set of credentials to
 issue or revoke.
 
-A session costs little: one VM for 30 minutes. bqto Pro adds `--spot`, which is
-cheaper but can be preempted.
+A session costs little: one small VM for 30 minutes.
 
 Nothing has a public IP. bqto creates the bastion with `--no-address`. Access
 comes only from IAP's `35.235.240.0/20` range, with an IAM identity.
@@ -101,30 +100,14 @@ SQL, Memorystore, AlloyDB, internal load balancers, private endpoints and
 services on VMs. IAP can only terminate on a VM, so every service type needs
 the hop.
 
-## Verified end to end
-
-On 2026-09-16, the manual equivalent ran against a real project and reached
-both services from a laptop:
-
-```text
-Valkey  PING -> +PONG
-Valkey  GET  -> hello          (SET from bastion, GET from laptop)
-Postgres TLS -> TLSv1.3, SASL/SCRAM auth requested
-```
-
-Postgres stopped at the auth challenge only because the test supplied no
-password. The server accepted TLS and asked for SCRAM, which exercises the full
-path.
-
 ## Scope
 
 bqto is for interactive use, such as psql, valkey-cli or a local client against
 a forwarded port, and for transfers of a few gigabytes.
 
-The numbers below were measured on 2026-10-14 in us-central1, against Cloud SQL
-for PostgreSQL 17 (db-f1-micro, private IP). The VM is an `e2-standard-2` in
-us-central1-a. The laptop is a Mac on a home line that macOS `networkQuality`
-put at 46 Mbps down.
+The numbers below were measured in us-central1, against Cloud SQL for
+PostgreSQL 17 (db-f1-micro, private IP), from a VM in the same region and from a
+laptop on a 46 Mbps connection.
 
 The server generates 1 GB and sends it:
 
@@ -145,27 +128,7 @@ One `select 1`, 20 in a row on one connection:
 
 From the VM, the tunnel carried about 550 Mbps, so IAP is not a hard limit at
 laptop speeds. From the laptop, it gave 6 to 8 MB/s (48 to 64 Mbps), close to
-that line's single speed reading, and a bigger bastion did not help. These runs
-cannot tell whether the line or one TCP connection at 150 ms was the limit. Two
-of the four `e2-micro` laptop runs had NumPy installed for gcloud and were no
-faster. Google suggests NumPy for upload speed, which these runs did not
-measure.
-
-Through the SOCKS proxy of bqto Pro (`e2-micro` bastion), a 30 MiB response from
-a Cloud Run service with internal ingress took 0.65 to 1.03 s from the VM
-(3 runs) and 5.5 to 7.3 s from the laptop (3 runs). Direct from the VM, with no
-tunnel, it took 1.25 s (1 run, probably including the service's cold start).
-
-How it was measured, with the `PG*` connection variables set and bqto Pro for
-`--machine-type`:
-
-```sh
-export Q="copy (select repeat('x',1000) from generate_series(1,1000000)) to stdout"
-time psql -c "$Q" | wc -c    # 1001000000 bytes
-bqto connect --service cloudsql --project P --instance NAME \
-  --machine-type TYPE --duration 20m -- bash -c 'time psql -c "$Q" | wc -c'
-(echo "\timing on"; for i in $(seq 20); do echo "select 1;"; done) | psql -At | grep Time
-```
+the connection's speed, and a bigger bastion did not help.
 
 bqto stops being the right tool in these cases:
 
