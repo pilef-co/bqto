@@ -220,8 +220,8 @@ An AI agent can drive bqto with the skill in
 | 128 + N | With `-- CMD`, the command was killed by signal N: 143 for SIGTERM, 137 for SIGKILL |
 | other | With `-- CMD`, the command's own exit code |
 
-To run bqto from a GitHub Actions job, see
-[github-actions.md](github-actions.md).
+To run bqto from a GitHub Actions job, use
+[bqto-action](https://github.com/pilef-co/bqto-action#readme).
 
 ## bqto Pro features in this binary
 

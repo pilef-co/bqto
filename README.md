@@ -132,9 +132,8 @@ It needs no service account key and no runner inside the VPC:
     run: ./migrate up
 ```
 
-[The action's README](https://github.com/pilef-co/bqto-action#inputs) lists the
-inputs, and [docs/github-actions.md](docs/github-actions.md)
-shows a full workflow.
+[The action's README](https://github.com/pilef-co/bqto-action#readme) lists the
+inputs and shows the setup.
 
 ## Services
 
@@ -270,8 +269,6 @@ a vulnerability, follow [SECURITY.md](SECURITY.md) instead.
 
 - [docs/usage.md](docs/usage.md): how a session works, flags, shell completion,
   scripts and CI, exit codes, cleanup and updates.
-- [docs/github-actions.md](docs/github-actions.md): an example GitHub Actions
-  workflow that reaches a private database with no key.
 - [docs/troubleshooting.md](docs/troubleshooting.md): tunnel errors and debug
   output.
 - [docs/permissions.md](docs/permissions.md): every role, and how to grant it.
