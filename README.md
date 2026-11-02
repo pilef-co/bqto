@@ -1,14 +1,50 @@
-# bqto
+<h1 align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/bqto-logo-dark.svg">
+    <img src="docs/assets/bqto-logo.svg" alt="bqto" width="220">
+  </picture>
+</h1>
 
-[![CI](https://github.com/pilef-co/bqto/actions/workflows/ci.yml/badge.svg)](https://github.com/pilef-co/bqto/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/pilef-co/bqto)](https://github.com/pilef-co/bqto/releases/latest)
-[![License](https://img.shields.io/github/license/pilef-co/bqto)](LICENSE)
+<p align="center">Reach private Google Cloud services from your laptop or CI, through a short-lived bastion.</p>
+
+<p align="center">
+  <a href="https://github.com/pilef-co/bqto/actions/workflows/ci.yml"><img src="https://github.com/pilef-co/bqto/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/pilef-co/bqto/releases/latest"><img src="https://img.shields.io/github/v/release/pilef-co/bqto" alt="Release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/pilef-co/bqto" alt="License"></a>
+</p>
 
 bqto connects your laptop or a CI job to a private Google Cloud service, such as
 Cloud SQL, AlloyDB or Memorystore. It creates a short-lived bastion VM, forwards
 a local port to the service through Identity-Aware Proxy (IAP), and deletes the
 bastion VM when the session ends. You do not need a VPN or a bastion that runs
 all the time.
+
+## How it works
+
+```mermaid
+flowchart LR
+    subgraph laptop["Your laptop or CI job"]
+        client["psql, redis-cli, your app<br/>127.0.0.1:15432"]
+    end
+    subgraph google["Google"]
+        iap["Identity-Aware Proxy<br/><i>checks your IAM roles</i>"]
+    end
+    subgraph vpc["Your VPC"]
+        bastion["bastion VM<br/>no external IP<br/><i>deleted when you stop</i>"]
+        service[("Cloud SQL, AlloyDB<br/>or Memorystore<br/>private IP")]
+    end
+    client -->|"HTTPS"| iap
+    iap -->|"SSH, port 22"| bastion
+    bastion --> service
+```
+
+1. bqto asks the service's API for its private IP.
+2. It creates a small bastion VM in the same network, with no external IP.
+3. It opens an IAP tunnel and forwards a local port through the bastion to the
+   service.
+4. When you stop, it deletes the bastion.
+
+[docs/usage.md](docs/usage.md#how-a-session-works) explains each step.
 
 ## What it looks like
 
