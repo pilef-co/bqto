@@ -2,8 +2,7 @@
 
 This page is for the team that decides whether developers may use bqto. It says what
 bqto does with your identity, your network and your data, and what it does not do.
-Each section links to the code, the documentation or the live test behind it. The
-roles and the commands to grant them are in [permissions.md](permissions.md).
+The roles and the commands to grant them are in [permissions.md](permissions.md).
 
 ## Data flows
 
@@ -28,20 +27,10 @@ developer's laptop ──WSS──── IAP (tunnel.cloudproxy.app) ──tcp:2
 - **`bqto update` checks what it downloads.** It installs only an archive whose
   SHA-256 matches the release's `checksums.txt`, writes the new binary next to
   the old one and renames it over it, so a failed update leaves the old binary.
-  When you cannot write to the binary's folder, it downloads and checks the
-  release as you, and only then runs one short root shell through `sudo`. That
-  shell makes a temporary file in the binary's folder, copies the checked
-  binary into it with `install`, keeping the old binary's owner, group and
-  mode, and renames it over the old one with `mv`. A refused or failed `sudo`
-  leaves the old binary.
+  When the folder is not yours, it uses `sudo` only for that last step.
   `checksums.txt` comes from the same release, so it guards against a broken
-  download, not against a compromised release. It follows only HTTPS
-  redirects, and never replaces a development build (a `go build` from a
-  checkout). Installed with `go install`, it runs
-  `go install github.com/pilef-co/bqto/cmd/bqto@latest` instead, and Go reaches
-  its own servers (the Go module proxy or GitHub). Installed with Homebrew, it
-  runs `brew upgrade bqto` instead, and Homebrew downloads and checks the
-  release itself.
+  download, not against a compromised release. Installed with `go install` or
+  Homebrew, it runs `go install` or `brew upgrade bqto` instead.
 - **The tunnel is gcloud's**: `gcloud compute ssh --tunnel-through-iap`, an SSH
   session through Identity-Aware Proxy to port 22 of the bastion, with port
   forwards to the service. From your laptop to the bastion, the traffic is inside
@@ -50,10 +39,9 @@ developer's laptop ──WSS──── IAP (tunnel.cloudproxy.app) ──tcp:2
 - **Everything bqto creates stays in your project**: the bastion VM and its boot
   disk. It creates no service account and no IAM binding.
 - **It creates no firewall rule, but it needs one**: an ingress rule for tcp:22
-  from `35.235.240.0/20`. bqto copies that rule's target tags onto the bastion
-  (`evalVPCFirewalls` and `instanceResource` in `internal/bastion/bastion.go`), so
-  every other rule that uses those tags applies to the bastion too. Watch those
-  tags.
+  from `35.235.240.0/20`. bqto copies that rule's target tags onto the bastion,
+  so every other rule that uses those tags applies to the bastion too. Watch
+  those tags.
 
 ### Data flows in bqto Pro
 
@@ -107,8 +95,6 @@ impersonation or Workload Identity Federation, with no key
 - It carries the label `bqto=session` and a random name, `bqto-` plus eight hex
   characters. Nothing on it names the person who created it; the audit logs do.
 
-Source: `internal/bastion/bastion.go`, `instanceResource`.
-
 ## What a developer can do
 
 bqto adds no power a developer did not have: the roles it needs let them create a
@@ -148,8 +134,7 @@ developer's own VM, and which control closes each row, is in
 | What was typed on the bastion | nowhere | — | — |
 | What was done in the service | the service's own connection logs, which see the bastion's IP | per service | yes, they are off by default |
 
-Tested live on 2026-09-24 and 2026-09-25. The queries for each row, including
-the one that finds orphaned bastions, are in
+The queries for each row, including the one that finds orphaned bastions, are in
 [permissions.md](permissions.md#what-a-session-leaves-behind).
 
 ## What bqto assumes

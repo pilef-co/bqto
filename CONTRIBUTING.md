@@ -14,12 +14,9 @@ postpones the failure. CI also checks that the pull request title is a
 Conventional Commit. The squash merge makes the title the commit subject, and
 release-please builds the version and the changelog from it.
 
-`mise.toml` pins every tool CI uses: Go, gcloud, gh, the linters,
-gitleaks and govulncheck. CI installs them from it with `jdx/mise-action`, so no
-workflow repeats a version; to update a tool, change `mise.toml` only. gcloud
-matters most, because bqto runs it and some of its behaviour depends on the
-version. With [mise](https://mise.jdx.dev) installed, `mise install` in the
-checkout puts them on `PATH` for this directory only. The checks CI runs:
+`mise.toml` pins every tool CI uses. With [mise](https://mise.jdx.dev)
+installed, `mise install` puts them on `PATH` for this checkout. To update a
+tool, change `mise.toml` only. The checks CI runs:
 
 ```sh
 test -z "$(gofmt -l . | tee /dev/stderr)"

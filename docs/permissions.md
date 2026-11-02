@@ -36,12 +36,8 @@ With bqto Pro, these roles are also needed:
 `roles/iap.tunnelResourceAccessor`. bqto checks this before it creates the
 bastion and prints the command to grant it.
 
-In the same call, bqto checks that the project exists. It asks
-`testIamPermissions`, which needs no role, for `resourcemanager.projects.get`
-too. When the answer does not include it, bqto reads the project, which needs
-`resourcemanager.projects.get`: `roles/compute.instanceAdmin.v1` and the custom
-role below hold it. When the project does not exist or the account cannot see
-it, bqto stops with `gcloud projects list` as the fix.
+If the project does not exist or you cannot see it, bqto stops and suggests
+`gcloud projects list`.
 
 ## APIs
 
@@ -80,11 +76,8 @@ project**. As `gcloud` does by default, bqto uses the project of each call:
   project, also for the calls on a Shared VPC host project.
 - In a bqto Pro stack, each service uses its own project for its lookup. The
   IAP check and the bastion use the first profile's project.
-- The wizard's list of organizations, folders and projects uses your gcloud
-  project (`gcloud config get project`), and falls back to your ADC quota
-  project. When both refuse it, the list is sent with no quota project, as
-  `gcloud projects list` does. Only when that fails too does the wizard warn
-  and ask you to type the project.
+- The wizard's list of projects uses your gcloud project
+  (`gcloud config get project`).
 
 That project needs the Compute Engine API, the Cloud Resource Manager API and
 the service's API enabled, and you need `roles/serviceusage.serviceUsageConsumer`
@@ -160,11 +153,7 @@ gcloud projects add-iam-policy-binding QUOTA_PROJECT --member=$MEMBER --role=rol
 ```
 
 Organization, optional. Without it, the wizard still lists your projects, but
-shows folder numbers instead of names. For a project in a folder it cannot
-list, the wizard reads the project's ancestry (`projects.getAncestry`, which
-needs `resourcemanager.projects.get` on the project, the permission that lists
-it) to place it under its organization. When that fails too, the project goes
-under "No organization".
+shows folder numbers instead of names.
 
 ```sh
 gcloud organizations add-iam-policy-binding ORG_ID --member=$MEMBER --role=roles/browser --condition=None
@@ -274,31 +263,10 @@ permission that call checks, on the bastion. `roles/compute.osLogin` and this
 custom role already hold it, so certificates need nothing more. The bastion has
 no service account, so `roles/iam.serviceAccountUser` is not needed either.
 
-gcloud also reads your OS Login profile (`getLoginProfile`), and creates it on
-your first login. Those calls act on your own profile and need no role. After
-the session, bqto reads the bastion's numeric ID to remove its host key and
-certificate from `~/.ssh`. That read uses `compute.instances.get`, which the
-session already needs to check the bastion's status.
-
-These permissions were checked against Google's documentation on 2026-10-16
-([audit logs](https://cloud.google.com/compute/docs/oslogin/view-audit-logs),
-[roles](https://cloud.google.com/iam/docs/roles-permissions/compute)), not with
-a live test of a role without them.
-
 ## What a session leaves behind
 
-This table shows what the audit trail records for a bqto session, with nothing
-installed and no service account on the bastion. A security team usually asks
-for it before it grants anything.
-
-| Question | Where the answer is | Cost | Can it be turned off |
-|---|---|---|---|
-| Who created and deleted the bastion | Admin Activity, `compute.instances.insert` and `delete` | free | no, they are always written |
-| Who logged in, and to which bastion | Data Access, `oslogin.googleapis.com`, method `CheckPolicy`, naming the person and the instance | Data Access volume | yes, it is a project setting |
-| Whether the session had sudo | the same entry, `policy: ADMIN_LOGIN` | — | — |
-| When the tunnel opened | nowhere. IAP writes nothing for TCP forwarding, even with its Data Access logs on | — | — |
-| What was typed on the bastion | nowhere; see below | — | — |
-| What was done in the service | the service's own connection logs, which see the bastion's IP | per service | yes, they are off by default |
+[security.md](security.md#the-audit-trail) lists what the audit trail records
+for a session. This section has the queries.
 
 The bastion's private IP ties the service's logs back to a session. The VM exists
 for minutes and forwards to one endpoint, so every connection from that address
@@ -328,15 +296,10 @@ gcloud logging read \
   --format='table(timestamp, protoPayload.authenticationInfo.principalEmail, protoPayload.request.instance, protoPayload.request.policy)'
 ```
 
-How a session ended is in the same logs. Every delete a person causes carries
-their email, and the user agent says which path they took: `Go-http-client/2.0`
-is bqto cleaning up, `google-cloud-sdk …` is gcloud by hand, `Mozilla/…` is the
-console. Reaching the end of `--duration` is not by itself the odd case: if bqto
-is still running it deletes the bastion like any other exit. The odd case is a
-bqto that is no longer running, because it was killed, the laptop slept or the
-terminal closed. Then the server-side deadline closes it instead, as
-`compute.instances.deferredDelete` by `system@google.com`. So an orphan is an
-`insert` by a person with no matching `delete`:
+How a session ended is in the same logs. A delete by a person carries their
+email. When bqto was not running to delete the bastion, the deadline deletes it,
+as `compute.instances.deferredDelete` by `system@google.com`. To find those
+bastions:
 
 ```sh
 gcloud logging read \
@@ -363,20 +326,10 @@ cost in log volume and, for MySQL, in instance performance. These flags come fro
 Google's documentation and were not tested live. This page does not cover the
 connection logs of Memorystore, Managed Kafka or Cloud Run.
 
-You can record what is typed on the bastion, but it weakens the bastion. It
-needs a logging agent on the VM, and the agent needs a service account with
-`roles/logging.logWriter`. Anyone with a shell can read that token from the
-metadata server. So the person being watched can write into the log that watches
-them, and the bastion stops being a machine that holds no credential. If that
-trade is worth it in your organization, you need these pieces:
-
-- A service account on the instance.
-- Private Google Access on the subnet, so that the agent can reach Cloud Logging
-  without internet.
-- The agent baked into your own image.
-
-Enabling Data Access logs for `iap.googleapis.com` is not worth it: tested on
-2026-09-25, a full session produced no entries under that service.
+bqto does not record what is typed on the bastion. That needs a logging agent
+and a service account on the VM, and anyone with a shell could read that
+account's token. Data Access logs for `iap.googleapis.com` record nothing for a
+session.
 
 ## What the developer can do with a bastion
 
@@ -396,14 +349,6 @@ hand with the roles bqto needs.
 | Create a VM that is not a bastion | no, with the `bqto-*` IAM condition | yes, without it | the IAM condition in "Narrowing the grant" |
 | Leave a machine running | up to 120 days: the VM deletes itself at the deadline, but the developer picks it with `--duration` | yes | none in bqto: an admin cannot cap `--duration` |
 | Do all this without being named | no: creation, login and deletion are in the audit logs | the same | Admin Activity and OS Login logs, above |
-
-## What a bastion can reach
-
-A bastion reaches what any VM in the VPC reaches: by default, every private
-address. bqto does not limit that, because it adds no power the developer did not
-have: the same roles let them create a VM and open a tunnel by hand. What decides
-what they can use is the service's own authentication, or egress firewall rules
-that the network admin may already have.
 
 ## Narrowing the grant
 
@@ -435,22 +380,13 @@ that the network admin may already have.
 
   A condition allows at most 12 logical operators. This one has 9, and a region
   with four zones needs 11. With predefined roles, put the same condition on
-  `roles/compute.osLogin` too, so that logins are limited to bastions.
-
-  Tested on 2026-09-23 with the custom role (Cloud SQL lines) granted to a
-  service account, in a project without Shared VPC:
-
-  - bqto created the bastion, opened the tunnel and deleted the bastion. The
-    boot disk was deleted with it, without `compute.disks.delete`.
-  - Creating a VM with any other name failed with
-    `Required 'compute.instances.create' permission`.
-  - SSH to a VM with any other name failed with `Permission denied (publickey)`,
-    even with `roles/compute.viewer` added: OS Login applies the condition. The
-    IAP tunnel to that VM still opened, since IAP cannot filter by VM name.
+  `roles/compute.osLogin` too, so that logins are limited to bastions. The
+  account cannot create or log in to a VM with another name. IAP cannot filter
+  by VM name, so a tunnel to such a VM still opens.
 - **Only SSH through IAP.** IAP conditions cannot match VM names, but they can
   match the port: grant `roles/iap.tunnelResourceAccessor` with the condition
-  `destination.port == 22`. Tested on 2026-09-29: bqto works, and a tunnel to any
-  other port of the bastion fails with `4033: 'not authorized'`. Google cannot check
+  `destination.port == 22`. A tunnel to any other port of the bastion then fails
+  with `4033: 'not authorized'`. Google cannot check
   a conditional grant in advance, so bqto prints a warning that the permission may
   be missing, and goes on.
 - **No root through metadata.** Creating a VM with metadata needs
