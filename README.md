@@ -8,6 +8,15 @@
 <p align="center">Reach private Google Cloud services from your laptop or CI, through a short-lived bastion.</p>
 
 <p align="center">
+  <a href="https://bqto.dev">Website</a> ·
+  <a href="#quickstart">Quickstart</a> ·
+  <a href="docs/usage.md">Documentation</a> ·
+  <a href="docs/troubleshooting.md">Troubleshooting</a> ·
+  <a href="https://github.com/pilef-co/bqto-action">GitHub Action</a> ·
+  <a href="https://bqto.dev/#waitlist">bqto Pro beta</a>
+</p>
+
+<p align="center">
   <a href="https://github.com/pilef-co/bqto/actions/workflows/ci.yml"><img src="https://github.com/pilef-co/bqto/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/pilef-co/bqto/releases/latest"><img src="https://img.shields.io/github/v/release/pilef-co/bqto" alt="Release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/pilef-co/bqto" alt="License"></a>
