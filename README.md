@@ -1,9 +1,8 @@
-<h1 align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/bqto-logo-dark.svg">
-    <img src="docs/assets/bqto-logo.svg" alt="bqto" width="220">
-  </picture>
-</h1>
+<p align="center">
+  <img src="docs/assets/bqto-logo.svg" alt="" width="96">
+</p>
+
+<h1 align="center">bqto</h1>
 
 <p align="center">Reach private Google Cloud services from your laptop or a CI job, through a short-lived bastion.</p>
 
