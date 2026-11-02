@@ -5,7 +5,13 @@
   </picture>
 </h1>
 
-<p align="center">Reach private Google Cloud services from your laptop or CI, through a short-lived bastion.</p>
+<p align="center">Reach private Google Cloud services from your laptop or a CI job, through a short-lived bastion.</p>
+
+<p align="center">
+  <a href="https://github.com/pilef-co/bqto/actions/workflows/ci.yml"><img src="https://github.com/pilef-co/bqto/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/pilef-co/bqto/releases/latest"><img src="https://img.shields.io/github/v/release/pilef-co/bqto" alt="Release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/pilef-co/bqto" alt="License"></a>
+</p>
 
 <p align="center">
   <a href="https://bqto.dev">Website</a> ·
@@ -16,12 +22,6 @@
   <a href="https://bqto.dev/#waitlist">bqto Pro beta</a>
 </p>
 
-<p align="center">
-  <a href="https://github.com/pilef-co/bqto/actions/workflows/ci.yml"><img src="https://github.com/pilef-co/bqto/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://github.com/pilef-co/bqto/releases/latest"><img src="https://img.shields.io/github/v/release/pilef-co/bqto" alt="Release"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/pilef-co/bqto" alt="License"></a>
-</p>
-
 bqto connects your laptop or a CI job to a private Google Cloud service, such as
 Cloud SQL, AlloyDB or Memorystore. It creates a short-lived bastion VM, forwards
 a local port to the service through Identity-Aware Proxy (IAP), and deletes the
@@ -30,10 +30,13 @@ all the time.
 
 ## How it works
 
+Your client connects to a local port. bqto carries the traffic through IAP and a
+temporary bastion VM to the service's private address.
+
 ```mermaid
 flowchart LR
     subgraph laptop["Your laptop or CI job"]
-        client["psql, redis-cli, your app<br/>127.0.0.1:15432"]
+        client["psql or your app<br/>127.0.0.1:15432"]
     end
     subgraph google["Google"]
         iap["Identity-Aware Proxy<br/><i>checks your IAM roles</i>"]
@@ -42,16 +45,18 @@ flowchart LR
         bastion["bastion VM<br/>no external IP<br/><i>deleted when you stop</i>"]
         service[("Cloud SQL, AlloyDB<br/>or Memorystore<br/>private IP")]
     end
-    client -->|"HTTPS"| iap
-    iap -->|"SSH, port 22"| bastion
-    bastion --> service
+    client -->|"HTTPS, port 443"| iap
+    iap -->|"SSH, port 22<br/>from 35.235.240.0/20"| bastion
+    bastion -->|"service port"| service
 ```
 
-1. bqto asks the service's API for its private IP.
-2. It creates a small bastion VM in the same network, with no external IP.
-3. It opens an IAP tunnel and forwards a local port through the bastion to the
-   service.
-4. When you stop, it deletes the bastion.
+1. bqto asks the service's API for its private address.
+2. bqto checks that the firewall lets IAP reach port 22, then creates a small
+   bastion VM in the service's network, with no external IP.
+3. bqto opens an IAP tunnel and forwards a local port, the service's port plus
+   10000, through the bastion to the service.
+4. When you stop, bqto deletes the bastion. If it cannot, a deadline set on the
+   VM deletes it.
 
 [docs/usage.md](docs/usage.md#how-a-session-works) explains each step.
 

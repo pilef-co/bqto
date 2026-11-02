@@ -10,7 +10,7 @@ the exit codes, cleanup, updates and the agent skill. The
 ```mermaid
 flowchart LR
     subgraph laptop["Developer laptop"]
-        client["psql / valkey-cli<br/>localhost:15432"]
+        client["psql or your app<br/>localhost:15432"]
     end
 
     subgraph google["Google front door"]
