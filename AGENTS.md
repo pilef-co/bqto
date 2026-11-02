@@ -67,8 +67,6 @@ Before the commit, update in the same PR whatever the change affects:
   and updates.
 - [docs/troubleshooting.md](docs/troubleshooting.md): a tunnel error that bqto
   recognizes.
-- [docs/github-actions.md](docs/github-actions.md): the workflow, its setup and
-  the flags it uses.
 - [docs/design.md](docs/design.md): why bqto needs a VM, its scope and its
   measurements.
 - [docs/permissions.md](docs/permissions.md): every new API call, with its permission and
