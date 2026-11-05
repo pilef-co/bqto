@@ -312,3 +312,7 @@ with exit code 2.
 
 bqto is licensed under the [Apache License 2.0](LICENSE). bqto Pro is a
 separate product with its own terms.
+
+bqto is not affiliated with or endorsed by Google. Google Cloud, Cloud SQL,
+AlloyDB, Memorystore and Cloud Run are trademarks of Google LLC. Other names are
+trademarks of their owners.

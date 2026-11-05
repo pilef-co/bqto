@@ -1,0 +1,16 @@
+name: Feature request
+description: Something bqto should do, or a service it should reach.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What you are trying to do, and what stops you today.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help
+      description: How you would like bqto to solve it. Leave it empty if you are not sure.
