@@ -1,0 +1,44 @@
+name: Bug report
+description: bqto did something wrong or failed with an unclear error.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: The command you ran and its full output. Remove project ids, addresses or anything else you do not want public.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: bqto version
+      description: The output of `bqto version`.
+    validations:
+      required: true
+  - type: input
+    id: gcloud
+    attributes:
+      label: gcloud version and OS
+      description: For example `gcloud 551.0.0, macOS 15 arm64`.
+    validations:
+      required: true
+  - type: dropdown
+    id: service
+    attributes:
+      label: Service
+      options:
+        - Cloud SQL
+        - AlloyDB
+        - Memorystore for Redis
+        - Memorystore for Valkey
+        - Other
+    validations:
+      required: true

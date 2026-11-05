@@ -400,7 +400,7 @@ func TestFirstPGASubnet(t *testing.T) {
 }
 
 func TestTrustedImageHintNamesImageProject(t *testing.T) {
-	spec := Spec{Project: "p", Image: "https://www.googleapis.com/compute/v1/projects/team-images/global/images/bqto-base-v1"}
+	spec := Spec{Project: "p", Image: "https://www.googleapis.com/compute/v1/projects/team-images/global/images/approved-image-v1"}
 	msg := "Constraint constraints/compute.trustedImageProjects violated for project p. Use of images from project team-images is prohibited."
 	err := policyViolation(spec, &googleapi.Error{Code: 412, Message: msg})
 	want := "Fix: ask an admin to allow projects/team-images in constraints/compute.trustedImageProjects for project p"
@@ -418,7 +418,7 @@ func TestParseImageRef(t *testing.T) {
 		wantErr     bool
 	}{
 		{input: DefaultImage, wantProject: "debian-cloud", wantFamily: "debian-13"},
-		{input: "projects/team-images/global/images/bqto-base-v1", wantProject: "team-images", wantImage: "bqto-base-v1"},
+		{input: "projects/team-images/global/images/approved-image-v1", wantProject: "team-images", wantImage: "approved-image-v1"},
 		{input: "https://www.googleapis.com/compute/v1/projects/p/global/images/family/f", wantProject: "p", wantFamily: "f"},
 		{input: "debian-13", wantErr: true},
 		{input: "projects/p/global/images/", wantErr: true},
