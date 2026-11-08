@@ -33,7 +33,7 @@ address.
 ```mermaid
 flowchart LR
     subgraph laptop["Your laptop or CI job"]
-        client["psql or your app<br/>127.0.0.1:15432"]
+        client["your database client or app<br/>127.0.0.1:15432"]
     end
     subgraph google["Google"]
         iap["Identity-Aware Proxy<br/><i>checks your IAM roles</i>"]
