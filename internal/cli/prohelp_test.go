@@ -100,29 +100,48 @@ func TestARegisteredProCommandKeepsItsOwnHelp(t *testing.T) {
 	}
 }
 
-func TestTheProBinaryListsItsFlagsLastUnderTheirOwnHeading(t *testing.T) {
+func TestTheProBinaryListsEveryFlagInOneAlphabeticalList(t *testing.T) {
 	_, help, code := runMain(t, "main-pro", "connect", "-h")
 	if code != 0 {
 		t.Fatalf("connect -h exited %d:\n%s", code, help)
 	}
-	free, pro, found := strings.Cut(help, "\n\nbqto Pro flags:\n")
-	if !found {
-		t.Fatalf("connect -h has no bqto Pro flags group:\n%s", help)
+	if strings.Contains(help, "bqto Pro flags:") {
+		t.Errorf("connect -h splits the flags under a bqto Pro heading:\n%s", help)
 	}
 	if strings.Contains(help, ext.ProTag()) {
 		t.Errorf("the Pro binary marks its own flags %s:\n%s", ext.ProTag(), help)
 	}
+	flags, found := strings.CutSuffix(help, "\n"+proFlagMark+": bqto Pro\n")
+	if !found {
+		t.Errorf("connect -h does not end with a line that says what %s means:\n%s", proFlagMark, help)
+	}
+	_, flags, _ = strings.Cut(flags, "\n")
+	var names []string
+	marked := map[string]bool{}
+	for block := range strings.SplitSeq(strings.Trim(flags, "\n"), "\n\n") {
+		head, text, _ := strings.Cut(block, "\n")
+		name, _, _ := strings.Cut(strings.TrimSpace(head), " ")
+		name = strings.TrimSuffix(strings.TrimLeft(name, "-"), ",")
+		names = append(names, name)
+		marked[name] = strings.HasSuffix(strings.TrimSpace(text), " "+proFlagMark) && !strings.Contains(text, "\n"+flagTextIndent+proFlagMark)
+	}
+	if !slices.IsSorted(names) {
+		t.Errorf("the flags are not in alphabetical order: %v\n%s", names, help)
+	}
 	for _, f := range ext.ProFlags() {
-		if !strings.Contains(pro, "  --"+f.Name+" ") && !strings.Contains(pro, "  --"+f.Name+"\n") {
-			t.Errorf("--%s is not in the bqto Pro group:\n%s", f.Name, pro)
+		if !slices.Contains(names, f.Name) {
+			t.Errorf("--%s is missing:\n%s", f.Name, help)
 		}
-		if strings.Contains(free, "  --"+f.Name+" ") || strings.Contains(free, "  --"+f.Name+"\n") {
-			t.Errorf("--%s is among the flags every user has:\n%s", f.Name, free)
+		if !marked[f.Name] {
+			t.Errorf("--%s does not end with %s:\n%s", f.Name, proFlagMark, help)
 		}
 	}
-	for _, name := range []string{"--project", "--service", "--instance", "--end-on-stdin-close"} {
-		if !strings.Contains(free, "  "+name+" ") && !strings.Contains(free, "  "+name+"\n") {
-			t.Errorf("%s is not among the flags every user has:\n%s", name, free)
+	for _, name := range []string{"project", "service", "instance", "end-on-stdin-close", "p"} {
+		if !slices.Contains(names, name) {
+			t.Errorf("--%s is missing:\n%s", name, help)
+		}
+		if marked[name] {
+			t.Errorf("--%s, which every user has, ends with %s:\n%s", name, proFlagMark, help)
 		}
 	}
 }
@@ -206,5 +225,17 @@ func TestAFlagSetOfOnlyProFlagsHasNoGroup(t *testing.T) {
 	printFlags(&out, fs)
 	if got, want := out.String(), "  --profile string\n    \ta profile to include\n"; got != want {
 		t.Errorf("printFlags = %q, want %q", got, want)
+	}
+}
+
+func TestACommandOnlyBqtoProHasNoProMarks(t *testing.T) {
+	fs := flag.NewFlagSet("profile create", flag.ContinueOnError)
+	fs.String("project", "", "Google Cloud project ID")
+	fs.Bool("replace", false, "overwrite the profile already saved as NAME")
+	fs.Bool("spot", false, "use a Spot VM")
+	var out bytes.Buffer
+	printFlags(&out, fs)
+	if strings.Contains(out.String(), proFlagMark) {
+		t.Errorf("profile create -h marks flags %s, though the whole command is bqto Pro:\n%s", proFlagMark, out.String())
 	}
 }

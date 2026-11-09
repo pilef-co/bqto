@@ -225,30 +225,37 @@ func dashed(name string) string {
 }
 
 func printFlags(w io.Writer, fs *flag.FlagSet) {
-	var free, pro []string
+	var free, pro []*flag.Flag
 	placeholders := false
 	fs.VisitAll(func(f *flag.Flag) {
-		block := formatFlag(fs, f)
-		if block == "" {
-			return
-		}
 		if isProFlag(f.Name) {
-			pro = append(pro, block)
+			pro = append(pro, f)
 			placeholders = placeholders || isPlaceholder(f)
 			return
 		}
-		free = append(free, block)
+		free = append(free, f)
 	})
-	switch {
-	case len(free) == 0:
-		fmt.Fprint(w, strings.Join(pro, "\n"))
-	case len(pro) == 0:
-		fmt.Fprint(w, strings.Join(free, "\n"))
-	case placeholders:
-		fmt.Fprint(w, strings.Join(free, "\n")+"\n\n"+strings.Join(pro, "\n"))
-	default:
-		fmt.Fprint(w, strings.Join(free, "\n")+"\nbqto Pro flags:\n"+strings.Join(pro, "\n"))
+	if placeholders && len(free) > 0 {
+		fmt.Fprint(w, joinFlags(fs, free, false)+"\n\n"+joinFlags(fs, pro, false))
+		return
 	}
+	var all []*flag.Flag
+	fs.VisitAll(func(f *flag.Flag) { all = append(all, f) })
+	markPro := fs.Name() == "connect" && len(pro) > 0
+	fmt.Fprint(w, joinFlags(fs, all, markPro))
+	if markPro {
+		fmt.Fprint(w, "\n"+proFlagMark+": bqto Pro\n")
+	}
+}
+
+func joinFlags(fs *flag.FlagSet, flags []*flag.Flag, markPro bool) string {
+	var blocks []string
+	for _, f := range flags {
+		if block := formatFlag(fs, f, markPro && isProFlag(f.Name)); block != "" {
+			blocks = append(blocks, block)
+		}
+	}
+	return strings.Join(blocks, "\n")
 }
 
 func isPlaceholder(f *flag.Flag) bool {
@@ -260,7 +267,7 @@ func isProFlag(name string) bool {
 	return slices.ContainsFunc(ext.ProFlags(), func(f ext.ProFlag) bool { return f.Name == name })
 }
 
-func formatFlag(fs *flag.FlagSet, f *flag.Flag) string {
+func formatFlag(fs *flag.FlagSet, f *flag.Flag, proMark bool) string {
 	if f.Name == "port" && fs.Lookup("p") != nil {
 		return ""
 	}
@@ -269,6 +276,9 @@ func formatFlag(fs *flag.FlagSet, f *flag.Flag) string {
 		name = "-p, --port"
 	}
 	kind, text := flag.UnquoteUsage(f)
+	if proMark {
+		text += "\x00" + proFlagMark
+	}
 	if p, placeholder := f.Value.(proPlaceholder); placeholder {
 		kind = ""
 		if !p.isBool {
@@ -292,6 +302,7 @@ func formatFlag(fs *flag.FlagSet, f *flag.Flag) string {
 }
 
 const (
+	proFlagMark    = "(P)"
 	flagTextIndent = "    \t"
 	flagTextWidth  = 80 - 8
 )

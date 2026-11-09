@@ -66,8 +66,8 @@ Cloud Run, Managed Kafka, Redis Cluster, clustered Valkey, profiles, stacks and
 the flags marked `(bqto Pro)` in `bqto connect -h` need bqto Pro. The free bqto
 refuses them with exit code 2 and a `Fix:` line; tell the user. In bqto Pro they
 work: `bqto profile -h` shows profiles and stacks with examples, `bqto connect -h`
-lists the bqto Pro flags under `bqto Pro flags:`, and bqto Pro's documentation
-has an example for each.
+lists every flag in one alphabetical list and ends each bqto Pro flag with
+`(P)`, and bqto Pro's documentation has an example for each.
 
 When the user wants to reach a target again later, save it as a profile (bqto
 Pro): `bqto profile create NAME --project P --service S --instance I`, or add
