@@ -3,27 +3,27 @@ module github.com/pilef-co/bqto
 go 1.26.0
 
 require (
-	cloud.google.com/go/auth v0.24.2
-	cloud.google.com/go/compute v1.74.1
-	cloud.google.com/go/memorystore v1.7.0
+	cloud.google.com/go/auth v0.24.3
+	cloud.google.com/go/compute v1.75.0
+	cloud.google.com/go/memorystore v1.8.0
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/huh v1.0.0
 	github.com/charmbracelet/x/cellbuf v0.0.15
 	github.com/charmbracelet/x/term v0.2.2
 	github.com/googleapis/gax-go/v2 v2.27.0
 	github.com/mattn/go-isatty v0.0.24
-	golang.org/x/oauth2 v0.37.0
-	golang.org/x/sys v0.49.0
-	google.golang.org/api v0.310.0
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20261019180522-ce908d29299b
+	golang.org/x/oauth2 v0.38.0
+	golang.org/x/sys v0.50.0
+	google.golang.org/api v0.311.0
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20261026165753-2ffab32bce7e
 	google.golang.org/grpc v1.85.0
 )
 
 require (
 	cloud.google.com/go v0.123.0 // indirect
-	cloud.google.com/go/auth/oauth2adapt v0.3.0 // indirect
+	cloud.google.com/go/auth/oauth2adapt v0.3.1 // indirect
 	cloud.google.com/go/compute/metadata v0.10.0 // indirect
-	cloud.google.com/go/longrunning v1.3.0 // indirect
+	cloud.google.com/go/longrunning v1.5.0 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/catppuccin/go v0.3.0 // indirect
@@ -61,7 +61,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.47.0 // indirect
 	go.opentelemetry.io/otel/trace v1.47.0 // indirect
 	golang.org/x/crypto v0.58.0 // indirect
-	golang.org/x/net v0.61.0 // indirect
+	golang.org/x/net v0.62.0 // indirect
 	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/text v0.43.0 // indirect
 	golang.org/x/time v0.16.0 // indirect
