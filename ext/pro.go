@@ -9,7 +9,7 @@ import (
 
 var (
 	ProAvailable = true
-	ProJoin      = "join the bqto Pro beta at https://bqto.dev/#waitlist"
+	ProJoin      = "get bqto Pro at https://bqto.dev"
 )
 
 func ProTag() string {

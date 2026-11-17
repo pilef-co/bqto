@@ -228,7 +228,7 @@ To run bqto from a GitHub Actions job, use
 This binary lists the bqto Pro flags last in `bqto connect -h`, marked
 `(bqto Pro)`. If you give it one of them, or a bqto Pro service or command, it
 says bqto Pro is needed and stops before it prompts or creates anything. It
-tells you what to do instead or to join the bqto Pro beta, and exits 2.
+tells you what to do instead or where to get bqto Pro, and exits 2.
 
 Help is the exception. `bqto -h` lists `bqto profile` and `bqto stack`, marked
 `(bqto Pro)`. `bqto profile -h` or `bqto stack -h` shows what they do, with

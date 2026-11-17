@@ -74,9 +74,9 @@ func TestProCommandsWithoutHelpStillNeedPro(t *testing.T) {
 		args []string
 		want string
 	}{
-		{"main", []string{"profile"}, "error: bqto Pro is needed for profiles\nFix: use bqto connect --service S --instance I, or join the bqto Pro beta at https://bqto.dev/#waitlist\n"},
-		{"main", []string{"stack", "list"}, "error: bqto Pro is needed for stacks\nFix: use bqto connect --service S --instance I, or join the bqto Pro beta at https://bqto.dev/#waitlist\n"},
-		{"main", []string{"profile", "create", "db", "--project", "help"}, "error: bqto Pro is needed for profiles\nFix: use bqto connect --service S --instance I, or join the bqto Pro beta at https://bqto.dev/#waitlist\n"},
+		{"main", []string{"profile"}, "error: bqto Pro is needed for profiles\nFix: use bqto connect --service S --instance I, or get bqto Pro at https://bqto.dev\n"},
+		{"main", []string{"stack", "list"}, "error: bqto Pro is needed for stacks\nFix: use bqto connect --service S --instance I, or get bqto Pro at https://bqto.dev\n"},
+		{"main", []string{"profile", "create", "db", "--project", "help"}, "error: bqto Pro is needed for profiles\nFix: use bqto connect --service S --instance I, or get bqto Pro at https://bqto.dev\n"},
 		{"main-hidden", []string{"stack", "show", "work"}, "error: stacks are not available in this build\nFix: use bqto connect --service S --instance I\n"},
 	}
 	for _, tc := range tests {

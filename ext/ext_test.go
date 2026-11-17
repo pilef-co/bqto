@@ -32,8 +32,8 @@ func TestProErrorNamesTheFeatureAndOneFix(t *testing.T) {
 		{false, ProError{What: "Managed Kafka", Drop: "use another --service"}, "Managed Kafka is not available in this build\nFix: use another --service"},
 		{false, ProError{What: "profiles", Drop: "use bqto connect --service S --instance I"}, "profiles are not available in this build\nFix: use bqto connect --service S --instance I"},
 		{false, ProError{What: "stacks", Drop: "use bqto connect --service S --instance I"}, "stacks are not available in this build\nFix: use bqto connect --service S --instance I"},
-		{true, ProError{What: "--web", Drop: "drop --web"}, "bqto Pro is needed for --web\nFix: drop --web, or join the bqto Pro beta at https://bqto.dev/#waitlist"},
-		{true, ProError{What: "profiles", Drop: "use bqto connect --service S --instance I"}, "bqto Pro is needed for profiles\nFix: use bqto connect --service S --instance I, or join the bqto Pro beta at https://bqto.dev/#waitlist"},
+		{true, ProError{What: "--web", Drop: "drop --web"}, "bqto Pro is needed for --web\nFix: drop --web, or get bqto Pro at https://bqto.dev"},
+		{true, ProError{What: "profiles", Drop: "use bqto connect --service S --instance I"}, "bqto Pro is needed for profiles\nFix: use bqto connect --service S --instance I, or get bqto Pro at https://bqto.dev"},
 	}
 	for _, tc := range tests {
 		ProAvailable = tc.available
@@ -121,7 +121,7 @@ func TestProHelpFollowsProAvailable(t *testing.T) {
 	}
 	ProAvailable = true
 	got = ProHelp()
-	if !strings.HasPrefix(got, "bqto Pro: ") || !strings.HasSuffix(got, "\n\nThese commands need bqto Pro:\njoin the bqto Pro beta at https://bqto.dev/#waitlist.\n") {
+	if !strings.HasPrefix(got, "bqto Pro: ") || !strings.HasSuffix(got, "\n\nThese commands need bqto Pro: get bqto Pro at https://bqto.dev.\n") {
 		t.Errorf("ProHelp while available:\n%s", got)
 	}
 }
