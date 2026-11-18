@@ -18,7 +18,7 @@
   <a href="docs/usage.md">Documentation</a> ·
   <a href="docs/troubleshooting.md">Troubleshooting</a> ·
   <a href="https://github.com/pilef-co/bqto-action">GitHub Action</a> ·
-  <a href="https://bqto.dev">bqto Pro</a>
+  <a href="https://bqto.dev/pricing">bqto Pro</a>
 </p>
 
 bqto works with Cloud SQL, AlloyDB and Memorystore. You do not need a VPN or a
@@ -280,7 +280,7 @@ a vulnerability, follow [SECURITY.md](SECURITY.md) instead.
 
 ## bqto Pro
 
-bqto Pro is the paid edition of bqto: get bqto Pro at https://bqto.dev. It is
+bqto Pro is the paid edition of bqto: get bqto Pro at https://bqto.dev/pricing. It is
 one `bqto` binary that does everything this one does. It adds:
 
 - Cloud Run services with internal ingress, through a SOCKS5 proxy or a local
