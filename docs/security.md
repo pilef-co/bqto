@@ -21,8 +21,8 @@ developer's laptop ──WSS──── IAP (tunnel.cloudproxy.app) ──tcp:2
   `api.github.com/repos/pilef-co/bqto/releases/latest`, with the `User-Agent`
   `bqto` and nothing about you, your version or your projects; GitHub sees your IP
   address. `bqto update` then downloads the archive and `checksums.txt` from the
-  release. bqto Pro asks Artifact Registry instead, through your own gcloud
-  login. No other command looks, and nothing runs in the background. To never
+  release. bqto Pro asks
+  `api.github.com/repos/pilef-co/bqto-pro-releases/releases` instead. No other command looks, and nothing runs in the background. To never
   contact GitHub, do not run these two commands.
 - **`bqto update` checks what it downloads.** It installs only an archive whose
   SHA-256 matches the release's `checksums.txt`, writes the new binary next to
