@@ -17,4 +17,4 @@ bqto Pro: saved connections (profiles) and groups of them (stacks).
   bqto profile list | show NAME | rename OLD NEW | rm NAME
       (the same for stack)
 
-These commands need bqto Pro: get bqto Pro at https://bqto.dev/pricing.
+These commands need bqto Pro: get bqto Pro at https://bqto.dev/#pro.

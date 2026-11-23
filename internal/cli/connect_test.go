@@ -161,7 +161,7 @@ func TestAProServiceIsRefusedBeforeAnything(t *testing.T) {
 	for svc, label := range map[string]string{"cloudrun": "Cloud Run", "kafka": "Managed Kafka"} {
 		err := cmdConnect([]string{"--project=p", "--service=" + svc, "--instance=r/x", "--no-input"})
 		var ec exitCodeError
-		if !errors.As(err, &ec) || ec.code != exitUsage || err.Error() != "bqto Pro is needed for "+label+"\nFix: use another --service, or get bqto Pro at https://bqto.dev/pricing" {
+		if !errors.As(err, &ec) || ec.code != exitUsage || err.Error() != "bqto Pro is needed for "+label+"\nFix: use another --service, or get bqto Pro at https://bqto.dev/#pro" {
 			t.Errorf("--service %s: err = %v, want exit 2 and the Pro error", svc, err)
 		}
 	}
@@ -217,7 +217,7 @@ func TestProFlagsAreRefusedInTheFreeBinary(t *testing.T) {
 		args := append([]string{"--project=p", "--instance=i", "--no-input"}, flagArgs...)
 		err := cmdConnect(args)
 		var ec exitCodeError
-		if !errors.As(err, &ec) || ec.code != exitUsage || err.Error() != "bqto Pro is needed for "+flagArgs[0]+"\nFix: drop "+flagArgs[0]+", or get bqto Pro at https://bqto.dev/pricing" {
+		if !errors.As(err, &ec) || ec.code != exitUsage || err.Error() != "bqto Pro is needed for "+flagArgs[0]+"\nFix: drop "+flagArgs[0]+", or get bqto Pro at https://bqto.dev/#pro" {
 			t.Errorf("connect %v: err = %v, want exit 2 and the Pro error", flagArgs, err)
 		}
 	}
@@ -233,7 +233,7 @@ func TestAProfileNameIsRefusedInTheFreeBinary(t *testing.T) {
 func TestAClusterFoundByLookupIsRefused(t *testing.T) {
 	_, err := resolveVariant(context.Background(), ext.Host{}, ext.Request{}, ext.Target{}, ext.NeedsFeature{Feature: "redis-cluster", Ref: "r/x", Name: "projects/p/locations/r/clusters/x"})
 	var ec exitCodeError
-	if !errors.As(err, &ec) || ec.code != exitUsage || err.Error() != "bqto Pro is needed for Memorystore for Redis Cluster (r/x)\nFix: connect to an instance instead, or get bqto Pro at https://bqto.dev/pricing" {
+	if !errors.As(err, &ec) || ec.code != exitUsage || err.Error() != "bqto Pro is needed for Memorystore for Redis Cluster (r/x)\nFix: connect to an instance instead, or get bqto Pro at https://bqto.dev/#pro" {
 		t.Errorf("err = %v, want exit 2 and the bqto Pro refusal", err)
 	}
 }

@@ -27,12 +27,12 @@ func TestTheRefusalsComeBeforeAnyPrompt(t *testing.T) {
 		args []string
 		want string
 	}{
-		{[]string{"--service", "kafka"}, "bqto Pro is needed for Managed Kafka\nFix: use another --service, or get bqto Pro at https://bqto.dev/pricing"},
-		{[]string{"--service", "cloudrun", "--project", "p"}, "bqto Pro is needed for Cloud Run\nFix: use another --service, or get bqto Pro at https://bqto.dev/pricing"},
+		{[]string{"--service", "kafka"}, "bqto Pro is needed for Managed Kafka\nFix: use another --service, or get bqto Pro at https://bqto.dev/#pro"},
+		{[]string{"--service", "cloudrun", "--project", "p"}, "bqto Pro is needed for Cloud Run\nFix: use another --service, or get bqto Pro at https://bqto.dev/#pro"},
 		{[]string{"--service", "mysql"}, "--service \"mysql\" is not supported\nFix: use "},
-		{[]string{"--endpoint", "10.0.0.5:5432"}, "bqto Pro is needed for --endpoint\nFix: drop --endpoint, or get bqto Pro at https://bqto.dev/pricing"},
-		{[]string{"--service", "cloudsql", "--spot"}, "bqto Pro is needed for --spot\nFix: drop --spot, or get bqto Pro at https://bqto.dev/pricing"},
-		{[]string{"db"}, "bqto Pro is needed for profiles\nFix: give --service and --instance instead of \"db\", or get bqto Pro at https://bqto.dev/pricing"},
+		{[]string{"--endpoint", "10.0.0.5:5432"}, "bqto Pro is needed for --endpoint\nFix: drop --endpoint, or get bqto Pro at https://bqto.dev/#pro"},
+		{[]string{"--service", "cloudsql", "--spot"}, "bqto Pro is needed for --spot\nFix: drop --spot, or get bqto Pro at https://bqto.dev/#pro"},
+		{[]string{"db"}, "bqto Pro is needed for profiles\nFix: give --service and --instance instead of \"db\", or get bqto Pro at https://bqto.dev/#pro"},
 	} {
 		prompted := onATerminalWithoutPrompts(t)
 		err := cmdConnect(tc.args)
@@ -117,7 +117,7 @@ func TestTheCoreValidateRefusesAPaidFlagNoHookRegistered(t *testing.T) {
 	for _, f := range ext.ProFlags() {
 		name := f.Name
 		err := (coreAPI{}).Validate(ext.Config{Project: "p", Service: "cloudsql", Instance: "i"}, map[string]bool{name: true})
-		if want := "bqto Pro is needed for --" + name + "\nFix: drop --" + name + ", or get bqto Pro at https://bqto.dev/pricing"; err == nil || err.Error() != want {
+		if want := "bqto Pro is needed for --" + name + "\nFix: drop --" + name + ", or get bqto Pro at https://bqto.dev/#pro"; err == nil || err.Error() != want {
 			t.Errorf("Validate with --%s: err = %v, want %q", name, err, want)
 		}
 	}
