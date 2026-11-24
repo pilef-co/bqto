@@ -24,6 +24,11 @@ developer's laptop ──WSS──── IAP (tunnel.cloudproxy.app) ──tcp:2
   release. bqto Pro asks
   `api.github.com/repos/pilef-co/bqto-pro-releases/releases` instead. No other command looks, and nothing runs in the background. To never
   contact GitHub, do not run these two commands.
+- **`GITHUB_TOKEN`, when you set it, goes only to GitHub.** `install.sh` and
+  bqto Pro's `bqto version` and `bqto update` send it as an `Authorization`
+  header so that GitHub allows more requests. `install.sh` gives the header to
+  curl through stdin, so it is not in curl's arguments. The free bqto binary does
+  not read it.
 - **`bqto update` checks what it downloads.** It installs only an archive whose
   SHA-256 matches the release's `checksums.txt`, writes the new binary next to
   the old one and renames it over it, so a failed update leaves the old binary.
@@ -49,6 +54,12 @@ developer's laptop ──WSS──── IAP (tunnel.cloudproxy.app) ──tcp:2
 
 The free binary refuses the services and the flag in this section.
 
+- **bqto Pro checks its license key with Polar.** It sends the key to
+  `api.polar.sh` when it checks the key. When you run `bqto license activate`, it
+  also sends the computer's name (its hostname), which your Polar portal shows
+  next to the key. Polar sees your IP address. Nothing about your projects or
+  sessions goes to Polar.
+
 - **Cloud Run, Managed Kafka and Redis or Valkey clusters** go through a SOCKS
   proxy on the bastion (`ssh -D`). That proxy reaches anything the bastion can
   reach, not only the service. For Cloud Run it uses Private Google Access. With
@@ -67,6 +78,7 @@ The free binary refuses the services and the flag in this section.
 |---|---|---|
 | Your gcloud login and Application Default Credentials | your laptop, where gcloud keeps them | until you revoke them; bqto only reads them |
 | The SSH key for the tunnel | `~/.ssh/google_compute_engine`, created by `gcloud compute ssh --quiet` with no passphrase; gcloud gets a short-lived OS Login certificate for it for each bastion, which takes only the certificate | the key has no expiry; each certificate is short-lived |
+| `GITHUB_TOKEN`, if you set it | your environment; `install.sh` and bqto Pro send it to GitHub only | as long as the token is valid |
 | Cloud Run identity tokens (`--web`, bqto Pro) | in memory, from `gcloud auth print-identity-token` | about an hour, refreshed by the proxy |
 | The bastion's own credentials | none: the VM is created with no service account | — |
 | Database passwords and service tokens | never seen by bqto: you type them into your own client | — |
