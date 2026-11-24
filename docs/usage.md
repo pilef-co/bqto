@@ -20,9 +20,10 @@ little shorter. The `ready:` line shows when the session ends, and bqto warns
 
 The tunnel can drop when the laptop sleeps, the network changes or IAP closes
 the session. bqto then opens it again against the same bastion, while the VM is
-still running and the session still has time. It waits longer between each
-attempt. It gives up after five attempts in a row, or as soon as the bastion is
-gone.
+still running, still has the instance ID it had at the start, and the session
+still has time. It waits longer between each attempt. It gives up after five
+attempts in a row, or as soon as the bastion is gone or another VM with the same
+name has replaced it.
 
 ### Session lifecycle
 

@@ -56,7 +56,34 @@ const deadlineSlack = time.Minute
 
 const portRetries = 3
 
+type bastionReplaced struct {
+	name    string
+	unknown bool
+}
+
+func (e bastionReplaced) Error() string {
+	if e.unknown {
+		return fmt.Sprintf("the tunnel dropped, and bqto did not reconnect: it could not read the instance ID of bastion %s at the start, so it cannot tell whether the VM is still its own\nFix: run bqto connect again", e.name)
+	}
+	return fmt.Sprintf("the tunnel dropped, and bqto did not reconnect: bastion %s now has a different instance ID, so someone replaced it with another VM of the same name\nFix: run bqto connect again; the project's audit log says who deleted and created %s (docs/usage.md, Who created a bastion)", e.name, e.name)
+}
+
+func ownBastion(name, status string, id, want uint64, found bool, err error) (string, bool, error) {
+	switch {
+	case err != nil || !found:
+		return status, found, err
+	case want == 0:
+		return "", false, bastionReplaced{name: name, unknown: true}
+	case id != want:
+		return "", false, bastionReplaced{name: name}
+	}
+	return status, found, nil
+}
+
 func endReason(statusErr error, found bool, status string, spot bool, now, deadline time.Time, duration string, stderr []string, lastStart error) error {
+	if replaced, ok := errors.AsType[bastionReplaced](statusErr); ok {
+		return replaced
+	}
 	switch {
 	case statusErr != nil:
 		err := fmt.Errorf("the tunnel exited, and bqto could not check the bastion: %w", statusErr)
@@ -661,7 +688,7 @@ type session struct {
 type sessionDeps struct {
 	create    func(ctx context.Context, s bastion.Spec, zones []string, onRetry func(zone, next string)) (string, error)
 	delete    func(ctx context.Context, project, zone, name string, mayExist bool) (bool, error)
-	status    func(ctx context.Context, project, zone, name string) (string, bool, error)
+	status    func(ctx context.Context, project, zone, name string) (string, uint64, bool, error)
 	hasSudo   func(ctx context.Context, project, zone, name string) (bool, error)
 	vmID      func(ctx context.Context, project, zone, name string) (uint64, error)
 	forget    func(project, zone string, id uint64) error
@@ -784,7 +811,8 @@ func runSession(ctx context.Context, s session, d sessionDeps) (err error) {
 	bastionStatus := func() (string, bool, error) {
 		stCtx, stCancel := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
 		defer stCancel()
-		return d.status(stCtx, cfg.Project, vmZone, vmName)
+		status, id, found, err := d.status(stCtx, cfg.Project, vmZone, vmName)
+		return ownBastion(vmName, status, id, vmID, found, err)
 	}
 	supervised := func() tunnel.Tunnel {
 		return tunnel.Supervisor{
