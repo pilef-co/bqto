@@ -745,6 +745,15 @@ func TestAReplacedBastionStopsTheReconnect(t *testing.T) {
 	}
 }
 
+func TestAStoppedBastionIsNotTakenForAReplacedOne(t *testing.T) {
+	for _, status := range []string{"STOPPING", "TERMINATED"} {
+		got, found, err := ownBastion("b", status, 0, 0, true, nil)
+		if err != nil || !found || got != status {
+			t.Errorf("ownBastion(%s, no start ID) = %q, %v, %v, want the status and no error", status, got, found, err)
+		}
+	}
+}
+
 func TestTwoServicesReserveTwoExtraPorts(t *testing.T) {
 	cloud := &fakeCloud{reserved: map[int]bool{19093: true}, clock: time.Date(2026, 9, 30, 12, 0, 0, 0, time.UTC)}
 	cloud.afterOpen = func(tun *fakeTunnel) {

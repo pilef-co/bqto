@@ -70,7 +70,7 @@ func (e bastionReplaced) Error() string {
 
 func ownBastion(name, status string, id, want uint64, found bool, err error) (string, bool, error) {
 	switch {
-	case err != nil || !found:
+	case err != nil || !found || status != "RUNNING":
 		return status, found, err
 	case want == 0:
 		return "", false, bastionReplaced{name: name, unknown: true}
