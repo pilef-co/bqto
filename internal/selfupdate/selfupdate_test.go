@@ -636,3 +636,23 @@ func TestDetect(t *testing.T) {
 		}
 	}
 }
+
+func TestARootOwnedFolderGetsARootOwnedBinary(t *testing.T) {
+	cases := []struct {
+		desc                   string
+		dirUID, exeUID, exeGID uint32
+		wantUID, wantGID       uint32
+	}{
+		{desc: "root folder, user binary", dirUID: 0, exeUID: 501, exeGID: 20, wantUID: 0, wantGID: 0},
+		{desc: "root folder, root binary", dirUID: 0, exeUID: 0, exeGID: 80, wantUID: 0, wantGID: 0},
+		{desc: "user folder keeps the owner", dirUID: 501, exeUID: 502, exeGID: 20, wantUID: 502, wantGID: 20},
+	}
+	for _, c := range cases {
+		t.Run(c.desc, func(t *testing.T) {
+			uid, gid := ownerInDir(c.dirUID, c.exeUID, c.exeGID)
+			if uid != c.wantUID || gid != c.wantGID {
+				t.Errorf("ownerInDir = %d:%d, want %d:%d", uid, gid, c.wantUID, c.wantGID)
+			}
+		})
+	}
+}

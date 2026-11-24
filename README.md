@@ -203,7 +203,8 @@ curl -fsSL https://raw.githubusercontent.com/pilef-co/bqto/main/install.sh | sh
 ```
 
 `BQTO_VERSION=v0.16.0` installs that release, and `BQTO_INSTALL_DIR=~/.local/bin`
-installs into another folder.
+installs into another folder. When you cannot write to the folder, it asks for
+sudo, and root owns the installed binary.
 
 With Homebrew:
 

@@ -27,7 +27,9 @@ developer's laptop ──WSS──── IAP (tunnel.cloudproxy.app) ──tcp:2
 - **`bqto update` checks what it downloads.** It installs only an archive whose
   SHA-256 matches the release's `checksums.txt`, writes the new binary next to
   the old one and renames it over it, so a failed update leaves the old binary.
-  When the folder is not yours, it uses `sudo` only for that last step.
+  When the folder is not yours, it uses `sudo` only for that last step. When
+  root owns the folder, root also owns the new binary, so your account cannot
+  change a binary that other users run.
   `checksums.txt` comes from the same release, so it guards against a broken
   download, not against a compromised release. Installed with `go install` or
   Homebrew, it runs `go install` or `brew upgrade bqto` instead.

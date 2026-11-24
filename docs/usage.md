@@ -319,7 +319,7 @@ installed bqto:
   following symlinks.
 
 If the folder is not yours, such as `/usr/local/bin`, `bqto update` asks for
-sudo.
+sudo. When root owns the folder, root also owns the new binary.
 
 ## Install by hand
 
@@ -329,7 +329,7 @@ Download the archive for your machine from the release page, check it and put
 ```sh
 gh release download --repo pilef-co/bqto --pattern 'bqto_*_darwin_arm64.tar.gz' --pattern checksums.txt
 shasum -a 256 --ignore-missing -c checksums.txt
-tar -xzf bqto_*_darwin_arm64.tar.gz bqto && sudo mv bqto /usr/local/bin/
+tar -xzf bqto_*_darwin_arm64.tar.gz bqto && sudo install -m 0755 -o 0 -g 0 bqto /usr/local/bin/
 ```
 
 On an Intel Mac, use `darwin_amd64`. On Linux, use `linux_amd64` or

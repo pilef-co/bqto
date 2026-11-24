@@ -187,16 +187,36 @@ func SudoCommand(staged, exe string, mode fs.FileMode, uid, gid uint32) []string
 	return []string{"sudo", "/bin/sh", "-c", sudoScript, "sh", fmt.Sprintf("%#o", mode.Perm()), staged, filepath.Dir(exe), exe, strconv.FormatUint(uint64(uid), 10), strconv.FormatUint(uint64(gid), 10)}
 }
 
-func ownerOf(exe string) (uid, gid uint32, err error) {
-	fi, err := os.Stat(exe)
+func ownerOf(path string) (uid, gid uint32, err error) {
+	fi, err := os.Stat(path)
 	if err != nil {
 		return 0, 0, err
 	}
 	st, ok := fi.Sys().(*syscall.Stat_t)
 	if !ok {
-		return 0, 0, fmt.Errorf("bqto cannot read the owner of %s", exe)
+		return 0, 0, fmt.Errorf("bqto cannot read the owner of %s", path)
 	}
 	return st.Uid, st.Gid, nil
+}
+
+func installOwner(exe string) (uid, gid uint32, err error) {
+	dirUID, _, err := ownerOf(filepath.Dir(exe))
+	if err != nil {
+		return 0, 0, err
+	}
+	exeUID, exeGID, err := ownerOf(exe)
+	if err != nil {
+		return 0, 0, err
+	}
+	uid, gid = ownerInDir(dirUID, exeUID, exeGID)
+	return uid, gid, nil
+}
+
+func ownerInDir(dirUID, exeUID, exeGID uint32) (uid, gid uint32) {
+	if dirUID == 0 {
+		return 0, 0
+	}
+	return exeUID, exeGID
 }
 
 type Options struct {
@@ -294,7 +314,7 @@ func sudoReplace(ctx context.Context, o Options, archive, dir string) error {
 	if err != nil {
 		return withFix(err, "run bqto update again, or download the release by hand, as the README shows under Build and install")
 	}
-	uid, gid, err := ownerOf(o.Exe)
+	uid, gid, err := installOwner(o.Exe)
 	if err != nil {
 		return withFix(err, "download the release by hand, as the README shows under Build and install")
 	}
