@@ -28,7 +28,7 @@ main() {
 
 	get() {
 		if [ -n "${GITHUB_TOKEN:-}" ]; then
-			curl -fsSL -H "Authorization: Bearer $GITHUB_TOKEN" "$@"
+			printf 'Authorization: Bearer %s\n' "$GITHUB_TOKEN" | curl -fsSL -H @- "$@"
 		else
 			curl -fsSL "$@"
 		fi
