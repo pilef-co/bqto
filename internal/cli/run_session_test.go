@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"net"
@@ -57,6 +58,7 @@ type fakeCloud struct {
 	mu          sync.Mutex
 	createErr   error
 	status      string
+	id          uint64
 	starts      []error
 	tunnels     []*fakeTunnel
 	forwards    [][]tunnel.Forward
@@ -93,10 +95,10 @@ func (f *fakeCloud) deps() sessionDeps {
 			f.deletes = append(f.deletes, deleteCall{zone, name, mayExist})
 			return f.deleteErr == nil, f.deleteErr
 		},
-		status: func(context.Context, string, string, string) (string, bool, error) {
+		status: func(context.Context, string, string, string) (string, uint64, bool, error) {
 			f.mu.Lock()
 			defer f.mu.Unlock()
-			return f.status, f.status != "", nil
+			return f.status, cmp.Or(f.id, 4242), f.status != "", nil
 		},
 		hasSudo: func(context.Context, string, string, string) (bool, error) { return false, nil },
 		vmID:    func(context.Context, string, string, string) (uint64, error) { return 4242, nil },
@@ -711,6 +713,44 @@ func TestADroppedTunnelKeepsTheSessionPort(t *testing.T) {
 	}
 	if open := cloud.ports.open(); len(open) != 0 {
 		t.Errorf("ports %v still held after the session ended", open)
+	}
+}
+
+func TestAReplacedBastionStopsTheReconnect(t *testing.T) {
+	for _, tc := range []struct {
+		desc, want string
+		startID    uint64
+	}{
+		{desc: "another instance ID", startID: 4242, want: "now has a different instance ID"},
+		{desc: "no instance ID at start", want: "could not read the instance ID"},
+	} {
+		t.Run(tc.desc, func(t *testing.T) {
+			cloud := &fakeCloud{status: "RUNNING", id: 9999, clock: time.Date(2026, 9, 30, 12, 0, 0, 0, time.UTC)}
+			cloud.afterOpen = func(tun *fakeTunnel) { close(tun.done) }
+			deps := cloud.deps()
+			deps.vmID = func(context.Context, string, string, string) (uint64, error) {
+				if tc.startID == 0 {
+					return 0, errors.New("boom")
+				}
+				return tc.startID, nil
+			}
+			err := runSession(context.Background(), testSession(), deps)
+			if err == nil || !strings.Contains(err.Error(), tc.want) || !strings.Contains(err.Error(), "\nFix: run bqto connect again") {
+				t.Fatalf("err = %v, want %q and a Fix line", err, tc.want)
+			}
+			if len(cloud.tunnels) != 1 {
+				t.Errorf("opened %d tunnels, want no reconnect", len(cloud.tunnels))
+			}
+		})
+	}
+}
+
+func TestAStoppedBastionIsNotTakenForAReplacedOne(t *testing.T) {
+	for _, status := range []string{"STOPPING", "TERMINATED"} {
+		got, found, err := ownBastion("b", status, 0, 0, true, nil)
+		if err != nil || !found || got != status {
+			t.Errorf("ownBastion(%s, no start ID) = %q, %v, %v, want the status and no error", status, got, found, err)
+		}
 	}
 }
 

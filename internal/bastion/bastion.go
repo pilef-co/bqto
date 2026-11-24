@@ -1044,10 +1044,10 @@ func ID(ctx context.Context, project, zone, name string) (uint64, error) {
 	return inst.GetId(), nil
 }
 
-func Status(ctx context.Context, project, zone, name string) (string, bool, error) {
+func Status(ctx context.Context, project, zone, name string) (string, uint64, bool, error) {
 	c, err := compute.NewInstancesRESTClient(ctx, quota.Options(ctx, clientOptions...)...)
 	if err != nil {
-		return "", false, gcperr.Wrap("connect to the Compute Engine API", err)
+		return "", 0, false, gcperr.Wrap("connect to the Compute Engine API", err)
 	}
 	defer c.Close()
 
@@ -1055,12 +1055,12 @@ func Status(ctx context.Context, project, zone, name string) (string, bool, erro
 		return c.Get(ctx, &computepb.GetInstanceRequest{Project: project, Zone: zone, Instance: name})
 	})
 	if isNotFound(err) {
-		return "", false, nil
+		return "", 0, false, nil
 	}
 	if err != nil {
-		return "", false, gcperr.Wrap("get bastion "+name, withoutURL(err))
+		return "", 0, false, gcperr.Wrap("get bastion "+name, withoutURL(err))
 	}
-	return inst.GetStatus(), true, nil
+	return inst.GetStatus(), inst.GetId(), true, nil
 }
 
 func Delete(ctx context.Context, project, zone, name string, mayBeCreating bool) (bool, error) {

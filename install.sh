@@ -28,7 +28,7 @@ main() {
 
 	get() {
 		if [ -n "${GITHUB_TOKEN:-}" ]; then
-			curl -fsSL -H "Authorization: Bearer $GITHUB_TOKEN" "$@"
+			printf 'Authorization: Bearer %s\n' "$GITHUB_TOKEN" | curl -fsSL -H @- "$@"
 		else
 			curl -fsSL "$@"
 		fi
@@ -69,7 +69,7 @@ main() {
 	else
 		echo "installing to $dir needs sudo" >&2
 		sudo mkdir -p "$dir"
-		sudo mv "$tmp/bqto" "$dir/bqto"
+		sudo install -m 0755 -o 0 -g 0 "$tmp/bqto" "$dir/bqto"
 	fi
 	echo "installed bqto $tag in $dir/bqto"
 	case ":$PATH:" in

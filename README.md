@@ -18,7 +18,7 @@
   <a href="docs/usage.md">Documentation</a> ·
   <a href="docs/troubleshooting.md">Troubleshooting</a> ·
   <a href="https://github.com/pilef-co/bqto-action">GitHub Action</a> ·
-  <a href="https://bqto.dev/#waitlist">bqto Pro beta</a>
+  <a href="https://bqto.dev/#pro">bqto Pro</a>
 </p>
 
 bqto works with Cloud SQL, AlloyDB and Memorystore. You do not need a VPN or a
@@ -203,7 +203,8 @@ curl -fsSL https://raw.githubusercontent.com/pilef-co/bqto/main/install.sh | sh
 ```
 
 `BQTO_VERSION=v0.16.0` installs that release, and `BQTO_INSTALL_DIR=~/.local/bin`
-installs into another folder.
+installs into another folder. When you cannot write to the folder, it asks for
+sudo, and root owns the installed binary.
 
 With Homebrew:
 
@@ -280,9 +281,8 @@ a vulnerability, follow [SECURITY.md](SECURITY.md) instead.
 
 ## bqto Pro
 
-bqto Pro is the paid build of bqto, now in beta. To try it, join the bqto Pro
-beta at https://bqto.dev/#waitlist. It is one `bqto` binary that does everything
-this one does. It adds:
+bqto Pro is the paid edition of bqto: get bqto Pro at https://bqto.dev/#pro. It is
+one `bqto` binary that does everything this one does. It adds:
 
 - Cloud Run services with internal ingress, through a SOCKS5 proxy or a local
   web proxy (`--web`).

@@ -20,9 +20,10 @@ little shorter. The `ready:` line shows when the session ends, and bqto warns
 
 The tunnel can drop when the laptop sleeps, the network changes or IAP closes
 the session. bqto then opens it again against the same bastion, while the VM is
-still running and the session still has time. It waits longer between each
-attempt. It gives up after five attempts in a row, or as soon as the bastion is
-gone.
+still running, still has the instance ID it had at the start, and the session
+still has time. It waits longer between each attempt. It gives up after five
+attempts in a row, or as soon as the bastion is gone or another VM with the same
+name has replaced it.
 
 ### Session lifecycle
 
@@ -228,7 +229,7 @@ To run bqto from a GitHub Actions job, use
 This binary lists the bqto Pro flags last in `bqto connect -h`, marked
 `(bqto Pro)`. If you give it one of them, or a bqto Pro service or command, it
 says bqto Pro is needed and stops before it prompts or creates anything. It
-tells you what to do instead or to join the bqto Pro beta, and exits 2.
+tells you what to do instead or where to get bqto Pro, and exits 2.
 
 Help is the exception. `bqto -h` lists `bqto profile` and `bqto stack`, marked
 `(bqto Pro)`. `bqto profile -h` or `bqto stack -h` shows what they do, with
@@ -318,7 +319,7 @@ installed bqto:
   following symlinks.
 
 If the folder is not yours, such as `/usr/local/bin`, `bqto update` asks for
-sudo.
+sudo. When root owns the folder, root also owns the new binary.
 
 ## Install by hand
 
@@ -328,7 +329,7 @@ Download the archive for your machine from the release page, check it and put
 ```sh
 gh release download --repo pilef-co/bqto --pattern 'bqto_*_darwin_arm64.tar.gz' --pattern checksums.txt
 shasum -a 256 --ignore-missing -c checksums.txt
-tar -xzf bqto_*_darwin_arm64.tar.gz bqto && sudo mv bqto /usr/local/bin/
+tar -xzf bqto_*_darwin_arm64.tar.gz bqto && sudo install -m 0755 -o 0 -g 0 bqto /usr/local/bin/
 ```
 
 On an Intel Mac, use `darwin_amd64`. On Linux, use `linux_amd64` or

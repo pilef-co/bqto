@@ -6,4 +6,4 @@
   [issue](https://github.com/pilef-co/bqto/issues/new/choose).
 - To report a vulnerability, do not open an issue. Follow
   [SECURITY.md](SECURITY.md).
-- For bqto Pro, join the beta at [bqto.dev](https://bqto.dev/#waitlist).
+- For bqto Pro, see [bqto.dev](https://bqto.dev).
